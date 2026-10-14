@@ -143,6 +143,9 @@ jobs:
           PAT_TOKEN: ${{ steps.tokens.outputs.fork_token }}
         run: |
           set -euo pipefail
+          # git merge needs a committer identity; actions/checkout does not set one.
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
           # The upstream is this repo (public, no token needed for fetch).
           git remote add upstream "https://github.com/${{ github.repository }}.git"
           git fetch upstream "${TARGET_BRANCH}"
