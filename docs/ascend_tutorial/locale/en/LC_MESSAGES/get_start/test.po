@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: verl-docs\n"
 
-"POT-Creation-Date: 2026-10-15 16:48+0800\n"
-"PO-Revision-Date: 2026-10-15 16:48+0800\n"
+"POT-Creation-Date: 2026-10-15 19:10+0800\n"
+"PO-Revision-Date: 2026-10-15 19:10+0800\n"
 
 "X-Source-Commit: ee1dc1c6a1e5fd7b593efe4346e6372c82ea009c\n"
 
@@ -21,4 +21,4 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "昇腾快速上手说明"
-msgstr "Ascend NPU Quick Start Guide"
+msgstr "Ascend Quick Start Guide"
