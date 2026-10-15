@@ -434,7 +434,8 @@ jobs:
             --base "${TARGET_BRANCH}" \
             --head "${PR_HEAD}" \
             --title "${TITLE}" \
-            --body "${BODY}" 2>&1; then
+            --body "${BODY}" 2>&1 \
+            --no-maintainer-edit; then
             echo "Pull request created successfully"
           else
             # A PR already exists for this head/base pair. Update its title
