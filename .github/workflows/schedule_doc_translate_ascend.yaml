@@ -181,10 +181,13 @@ jobs:
             fi
           done
 
-          # Commit the restored files if any were recovered.
+          # Commit the restored files as a new commit (NOT --amend) so the
+          # push is always fast-forward. --amend would rewrite the existing
+          # HEAD commit's hash when the merge is a no-op ("Already up to
+          # date"), causing a non-fast-forward push rejection.
           if ! git diff --cached --quiet; then
-            git commit --amend --no-edit
-            echo "Restored fork-only tooling added to the merge commit"
+            git commit -m "chore: restore fork-only translation tooling"
+            echo "Restored fork-only tooling committed"
           fi
 
           # Push the synced main back to the fork so the .po translation
