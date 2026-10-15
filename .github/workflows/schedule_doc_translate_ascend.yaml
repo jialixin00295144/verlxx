@@ -308,12 +308,13 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       # -----------------------------------------------------------------
-      # Step 8: Create clean branch and commit.
-      # Based on the fork's synced main, create a new branch. git rm .po
-      # files, python script, and skill file from the branch so the PR to
-      # the upstream verl source repo only carries en/ docs and workflow
-      # files. Since the upstream does not have these tooling files, the
-      # deletions produce no diff in the cross-repo PR.
+      # Step 8: Create clean branch and single commit.
+      # Create a branch from the fork's synced main, then reset its pointer
+      # to upstream/main so the PR carries exactly ONE commit on top of
+      # upstream/main — not the sync merge commit or the .po memory commit
+      # from the fork's main. Fork-only files (.po, translate_md.py,
+      # skill.md) are in the working tree but not in the index after the
+      # reset, so they never appear in the commit.
       # -----------------------------------------------------------------
       - name: Create clean branch and commit
         if: steps.results.outputs.has_changes == 'true'
@@ -328,26 +329,33 @@ jobs:
           BRANCH_NAME="auto-pr/doc-translate"
           echo "BRANCH_NAME=${BRANCH_NAME}" >> "$GITHUB_ENV"
 
+          # Compute date once for both the commit message and the PR title.
+          TRANSLATE_DATE=$(date +%Y-%m-%d)
+          echo "TRANSLATE_DATE=${TRANSLATE_DATE}" >> "$GITHUB_ENV"
+
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          # Reset the branch to the current HEAD (creates it if absent).
+
+          # Create the branch from the current HEAD (fork's main after sync
+          # and .po memory commit).
           git checkout -B "${BRANCH_NAME}"
 
-          # Delete translation tooling and .po cache from the branch —
-          # these only live in the fork, not in the upstream repo.
-          # --ignore-unmatch: no error if the path does not exist.
-          git rm -r --ignore-unmatch docs/ascend_tutorial/locale/
-          git rm --ignore-unmatch .github/workflows/scripts/translate_md.py
-          git rm -r --ignore-unmatch .agent/skills/translate-ascend/
+          # Reset the branch pointer to upstream/main while keeping the
+          # working tree intact. This ensures the PR contains exactly ONE
+          # commit on top of upstream/main, instead of carrying the sync
+          # merge commit and the .po memory commit from the fork's main.
+          # After the reset, the index matches upstream/main (which has no
+          # .po, translate_md.py, or skill.md), so those fork-only files
+          # are in the working tree but not staged — they will not appear
+          # in the commit.
+          git reset --mixed "upstream/${TARGET_BRANCH}"
 
           # Stage only the en/ docs and workflow files.
           git add docs/ascend_tutorial/en/
           git add .github/workflows/
 
           # Safety net 1: no additions/modifications outside en/ docs and
-          # workflows/ (deletions of .po/.py/.skill are allowed — they
-          # produce no diff in the cross-repo PR since the upstream does
-          # not have them).
+          # workflows/.
           leaked=$(git diff --cached --diff-filter=AM --name-only \
             | grep -vE '^(docs/ascend_tutorial/en/|\.github/workflows/)' || true)
           if [ -n "${leaked}" ]; then
@@ -370,7 +378,7 @@ jobs:
           fi
 
           file_count=$(git diff --cached --diff-filter=AM --name-only | wc -l)
-          git commit -s -m "[doc] feat: Auto-translate Chinese docs to English (${file_count} file(s))"
+          git commit -s -m "[doc] feat: Auto-translate Chinese docs to English ${TRANSLATE_DATE} (${file_count} files)"
 
           # Push the clean branch to the fork (force: overwrite previous
           # state so the existing PR is updated instead of opening a new one).
@@ -397,7 +405,7 @@ jobs:
             exit 1
           fi
 
-          DATE=$(date +%Y-%m-%d)
+          DATE="${TRANSLATE_DATE:-$(date +%Y-%m-%d)}"
           # PR title must pass tests/special_sanity/check_pr_title.py:
           #   [BREAKING][module] type: description
           #   module in {doc, ...}, type in {feat, fix, refactor, chore, test}
