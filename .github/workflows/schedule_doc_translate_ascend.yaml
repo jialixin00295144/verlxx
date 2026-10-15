@@ -416,9 +416,9 @@ jobs:
           This PR uses the **cross-repository doc translation workflow**:
           - The workflow runs in this repo (${{ github.repository }}) and checks out the fork private repo that carries the translation tooling
           - The fork's main branch is synced with the latest upstream to get the latest Chinese docs
-          - Chinese docs under `docs/ascend_tutorial/zh/` are translated via LLM API into English
-          - English docs are written to `docs/ascend_tutorial/en/` (same format, mirrored directory structure)
-          - Translation tooling (`translate_md.py`, `skill.md`, `.po` cache) lives only in the fork
+          - Chinese docs under \`docs/ascend_tutorial/zh/\` are translated via LLM API into English
+          - English docs are written to \`docs/ascend_tutorial/en/\` (same format, mirrored directory structure)
+          - Translation tooling (\`translate_md.py\`, \`skill.md\`, \`.po\` cache) lives only in the fork
           - This PR only carries English docs and workflow files
 
           ---
