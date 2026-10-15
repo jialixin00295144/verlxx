@@ -132,11 +132,20 @@ jobs:
 
       # -----------------------------------------------------------------
       # Step 2: Sync the fork's main with the latest upstream verl source
-      # repo. The upstream is this repo (github.repository = verl-project/verl).
-      # The merge brings in the latest Chinese source docs (zh/) and any
-      # previously merged en/ docs. The fork's translation tooling
-      # (translate_md.py, skill.md, .po cache) are not in the upstream, so
-      # the merge adds them on top of the synced content without conflicts.
+      # repo. The upstream is this repo (github.repository). The merge
+      # brings in the latest Chinese source docs (zh/) and any previously
+      # merged en/ docs.
+      #
+      # IMPORTANT: A previous PR (created by the old workflow's git rm
+      # approach) brought DELETIONS of fork-only files (translate_md.py,
+      # skill.md) into upstream's history. Every merge of upstream into
+      # fork propagates those deletions, causing the fork to lose its
+      # translation tooling. After the merge we restore these files from
+      # the git history so the fork's main always carries them.
+      #
+      # The new workflow (Step 8: git reset --mixed) ensures future PRs
+      # are based on upstream/main and never introduce new deletions, so
+      # this restore is only needed to heal the damage from the old PR.
       # -----------------------------------------------------------------
       - name: Sync fork with upstream verl source repo
         env:
@@ -150,6 +159,34 @@ jobs:
           git remote add upstream "https://github.com/${{ github.repository }}.git"
           git fetch upstream "${TARGET_BRANCH}"
           git merge "upstream/${TARGET_BRANCH}" --no-edit -m "Sync with upstream ${{ github.repository }}@${TARGET_BRANCH}"
+
+          # Restore fork-only translation tooling that may have been
+          # deleted by the merge. The old workflow's git rm in Step 8
+          # brought deletions of translate_md.py and skill.md into
+          # upstream's history (via the merged PR). Every subsequent
+          # merge of upstream into fork re-applies those deletions.
+          # We search the git history for the commit that originally
+          # added each file and restore it from there.
+          for fork_file in \
+            .github/workflows/scripts/translate_md.py \
+            .agent/skills/translate-ascend/skill.md; do
+            if [ ! -f "$fork_file" ]; then
+              restore_commit=$(git log --all --diff-filter=A --format='%H' -- "$fork_file" | head -1)
+              if [ -n "$restore_commit" ]; then
+                git checkout "$restore_commit" -- "$fork_file"
+                echo "Restored $fork_file from commit $restore_commit"
+              else
+                echo "::warning::Could not find $fork_file in git history"
+              fi
+            fi
+          done
+
+          # Commit the restored files if any were recovered.
+          if ! git diff --cached --quiet; then
+            git commit --amend --no-edit
+            echo "Restored fork-only tooling added to the merge commit"
+          fi
+
           # Push the synced main back to the fork so the .po translation
           # memory and the tooling stay on the fork's main branch.
           git remote set-url origin "https://x-access-token:${PAT_TOKEN}@github.com/${FORK_REPO}.git"
