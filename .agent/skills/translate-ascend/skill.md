@@ -94,17 +94,24 @@ applicable-scope:
 - 词汇简缩（char、config）
 - 缩略词（can't、it's）
 
-#### 语法完整性检查（重要）
+#### 语法完整性检查（新增，重要）
 
 > ⚠️ 警告：中文省略主语常见，但英文必须有明确主语和动词！忽略此规则会导致严重语法错误！
 
-必须检查以下语法错误：
+**必须检查以下语法错误：**
 
-- **缺少主语**：中文省略主语常见，但英文必须有主语。检查每个句子是否包含明确的主语（you、the system、this guide 等）。
-- **缺少动词**：检查每个句子是否包含明确的动词。
-- **句子结构完整性**：使用 "For + 动名词" 结构引导长句；避免 "名词 + please refer to" 的错误结构。
+- **缺少主语**
+  - 中文省略主语常见，但英文必须有主语
+  - 检查方法：每个句子是否包含明确的主语（you、the system、this guide 等）
 
-#### 句子结构重构规则
+- **缺少动词**
+  - 检查方法：每个句子是否包含明确的动词
+
+- **句子结构完整性**
+  - 使用 "For + 动名词" 结构引导长句
+  - 避免 "名词 + please refer to" 的错误结构
+
+#### 句子结构重构规则（新增）
 
 中文长句的英文处理策略：
 
@@ -146,7 +153,7 @@ applicable-scope:
 | WebIDE可提供... | "WebIDE can provide..." | "WebIDE provides..." | 主动语态更直接 |
 | 该平台为您提供... | "provides...for you" | "provides you with..." | "provide you with" 更地道 |
 
-#### 冠词使用规范
+#### 冠词使用规范（新增）
 
 必须检查冠词：
 
@@ -158,10 +165,16 @@ applicable-scope:
    | "Ascend environment" | "an Ascend environment" |
    | "Docker engine" | "the Docker engine" |
 
-- **特指名词前用 the**："the host machine"（特指宿主机）、"the root user"（特指 root 用户）、"the CANN software package"（特指某个包）
-- **泛指名词前用 a/an**："an Ascend environment"（泛指一个环境）、"a compilation environment"（泛指编译环境）
+- **特指名词前用 the**
+  - "the host machine"（特指宿主机）
+  - "the root user"（特指 root 用户）
+  - "the CANN software package"（特指某个包）
 
-#### 表格字段翻译标准
+- **泛指名词前用 a/an**
+  - "an Ascend environment"（泛指一个环境）
+  - "a compilation environment"（泛指编译环境）
+
+#### 表格字段翻译标准（新增）
 
 **常用字段标准翻译：**
 
@@ -173,7 +186,10 @@ applicable-scope:
 | 可选 | "Optional" | 标准用法 |
 | 建议 | "Recommended" | 比 "Suggestion" 更常见 |
 
-**表格内容翻译要求：** 每个单元格必须是完整句子或短语，不可出现语法错误的片段。
+**表格内容翻译要求：**
+
+- 每个单元格必须是完整句子或短语
+- 不可出现语法错误的片段
 
 #### 连字符处理
 
@@ -219,14 +235,14 @@ applicable-scope:
 
 | 中文名 | 英文名 |
 | --- | --- |
-| Ascend 950PR / Ascend 950DT | Ascend 950PR / Ascend 950DT |
-| Atlas A3 训练系列产品 / Atlas A3 推理系列产品 | Atlas A3 training products / Atlas A3 inference products |
-| Atlas A3 训练系列产品 | Atlas A3 training products |
-| Atlas A2 训练系列产品 / Atlas A2 推理系列产品 | Atlas A2 training products / Atlas A2 inference products |
-| Atlas A2 训练系列产品 | Atlas A2 training products |
-| Atlas 200I/500 A2 推理产品 | Atlas 200I/500 A2 inference products |
-| Atlas 训练系列产品 | Atlas training products |
-| Atlas 推理系列产品 | Atlas inference products |
+| Ascend 950PR&950DT系列产品 | Ascend 950PR&950DT products |
+| Atlas A3系列产品 | Atlas A3 products |
+| Atlas A3训练系列产品 | Atlas A3 training products |
+| Atlas A2系列产品 | Atlas A2 products |
+| Atlas A2训练系列产品 | Atlas A2 training products |
+| Atlas 200I/500 A2推理产品 | Atlas 200I/500 A2 inference products |
+| Atlas训练系列产品 | Atlas training products |
+| Atlas推理系列产品 | Atlas inference products |
 
 ### 4.3 verl / Ascend 补充术语（verl 项目特有）
 
@@ -281,7 +297,7 @@ applicable-scope:
 
 - 运行位置：由 **上游 verl 源码仓**（`verl-project/verl`）触发，通过仓库变量 `FORK_REPO` 指向 fork 私仓；fork 私仓的 main 分支存放翻译工具（`translate_md.py`、`skill.md`）和翻译记忆（`docs/ascend_tutorial/locale/en/LC_MESSAGES/**.po`）
 - 同步方式：工作流检出 fork 私仓的 main 分支，然后 merge 上游 verl 源码仓的最新 main 分支，获取最新的中文源文档，再将同步后的 main 推回 fork 私仓
-- 交付方式：翻译完成后，基于 fork 私仓的 main 分支新建分支，`git rm` `.po` 缓存、`translate_md.py`、`skill.md`，只暂存 `docs/ascend_tutorial/en/**` 英文文档和 `.github/workflows/` 工作流文件，推到 fork 私仓后用 `GITHUB_TOKEN` 向上游 verl 源码仓提交跨仓 PR
+- 交付方式：翻译完成后，基于 fork 私仓的 main 分支新建分支，通过 `git reset --mixed upstream/main` 将分支指针重置到上游 main，使 fork 专有文件（`.po` 缓存、`translate_md.py`、`skill.md`）留在工作树中但不进入暂存区，只暂存 `docs/ascend_tutorial/en/**` 英文文档，推到 fork 私仓后用 `GITHUB_TOKEN` 向上游 verl 源码仓提交跨仓 PR
 - 上游 verl 源码仓只存储工作流文件和 `docs/ascend_tutorial/en/**` 英文文档；翻译工具和 `.po` 缓存仅存于 fork 私仓
 - 中文源文档：`docs/ascend_tutorial/zh/**`（排除 `index.rst`）
 - 英文输出文档：`docs/ascend_tutorial/en/**`（Markdown/RST，镜像目录结构，由翻译引擎直接渲染生成）

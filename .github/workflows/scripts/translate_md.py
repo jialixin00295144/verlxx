@@ -35,7 +35,7 @@ translations and only call the API for changed blocks.
 
 Each source document is split into blocks at blank-line boundaries (fenced
 code blocks stay intact even when they contain blank lines). Blocks containing
-Chinese are translated via the DeepSeek API; pure-ASCII/structural blocks
+Chinese are translated via the LLM API; pure-ASCII/structural blocks
 (code, markup, separators) pass through untouched. Blocks are re-assembled in
 the original order, preserving the exact document structure.
 
@@ -459,7 +459,7 @@ def write_po_file(
     if skill_version:
         lines.append(f'"X-Skill-Version: {skill_version}\\n"\n')
     lines.append(
-        '"Last-Translator: Auto Translation (DeepSeek)\\n"\n'
+        '"Last-Translator: Auto Translation (LLM)\\n"\n'
         '"Language-Team: English\\n"\n'
         '"Language: en\\n"\n'
         '"MIME-Version: 1.0\\n"\n'
@@ -570,7 +570,7 @@ def split_source_into_blocks(content: str) -> list[tuple]:
 def _restore_enumeration_prefix(msgid: str, msgstr: str) -> str:
     """Ensure the translated text keeps the 'N. ' enumeration prefix of its msgid.
 
-    The DeepSeek model sometimes drops the list-number prefix when translating
+    The LLM sometimes drops the list-number prefix when translating
     Chinese headings, e.g.
 
         msgid  "1. 安装与环境配置"
