@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: verl-docs\n"
 
-"POT-Creation-Date: 2026-10-15 22:18+0800\n"
-"PO-Revision-Date: 2026-10-15 22:18+0800\n"
+"POT-Creation-Date: 2026-10-22 16:58+0800\n"
+"PO-Revision-Date: 2026-10-22 16:58+0800\n"
 
 "X-Source-Commit: ee1dc1c6a1e5fd7b593efe4346e6372c82ea009c\n"
 
 "X-Skill-Version: 1.0.0\n"
 
-"Last-Translator: Auto Translation (DeepSeek)\n"
+"Last-Translator: Auto Translation (LLM)\n"
 "Language-Team: English\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
