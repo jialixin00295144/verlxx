@@ -493,6 +493,23 @@ def _contains_cjk(s: str) -> bool:
     return bool(_CJK_RE.search(s))
 
 
+def _is_rst_table_separator(line: str) -> bool:
+    """True if the line is an RST simple-table separator (e.g. '===  ===  ===').
+
+    Distinguishes table separators (multiple groups of the same character
+    separated by spaces) from section-title underlines (a single unbroken
+    run of one character with no internal spaces).  A section underline
+    like ``====`` has no internal space and is NOT a table separator.
+    """
+    stripped = line.strip()
+    if not stripped or " " not in stripped:
+        return False
+    chars = set(stripped.replace(" ", ""))
+    if len(chars) != 1:
+        return False
+    return chars.pop() in "=~-^\"#+*"
+
+
 def split_source_into_blocks(content: str) -> list[tuple]:
     """Split source content into (text, is_translatable) pieces.
 
@@ -500,8 +517,13 @@ def split_source_into_blocks(content: str) -> list[tuple]:
     tables, and code blocks stay intact. Blank-line separators are preserved
     verbatim as separate (non-translatable) pieces. Fenced code blocks
     (``` ... ```) are kept as a single piece even when they contain blank
-    lines. A piece is translatable when it contains CJK characters;
-    pure-ASCII / structural pieces pass through untouched.
+    lines. RST simple-table separator lines (e.g. ``===  ===  ===``) are
+    also treated as split boundaries so that each table row becomes a
+    separate piece — this prevents the LLM from receiving an entire table
+    (structural separators mixed with Chinese data rows) as one block,
+    which often produces empty responses. A piece is translatable when it
+    contains CJK characters; pure-ASCII / structural pieces pass through
+    untouched.
 
     Re-joining the pieces in order reproduces the original content exactly.
     """
@@ -555,6 +577,15 @@ def split_source_into_blocks(content: str) -> list[tuple]:
         if not in_fence and stripped == "":
             emit_block()
             sep += "\n"
+            continue
+        if not in_fence and _is_rst_table_separator(stripped):
+            # RST table separator: split here so each table row becomes its
+            # own piece. The separator line itself is non-translatable
+            # (pure ASCII markup) and is emitted as a separate piece to
+            # preserve the exact table structure when reassembled.
+            emit_block()
+            emit_sep()
+            pieces.append((line + line_ending, False))
             continue
         if not in_fence and sep:
             emit_sep()
@@ -870,6 +901,7 @@ class DocTranslator:
             )
             text = response.choices[0].message.content
             if not text:
+                print(f"  Empty LLM response for '{context}' (model returned no content)", flush=True)
                 return None
             text = text.strip()
             if trailing_nl and not text.endswith("\n"):
