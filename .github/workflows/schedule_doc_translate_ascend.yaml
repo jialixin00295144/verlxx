@@ -36,13 +36,15 @@
 #   1. Checkout the fork private repo's main branch (has translate_md.py,
 #      skill.md, .po cache, zh/, en/).
 #   2. Fetch and merge the upstream's main into the fork's main (sync).
-#   3. Push the synced main back to the fork.
-#   4. Run translation (translate_md.py).
-#   5. Create a new branch from the fork's synced main.
-#   6. On the new branch, git rm .po cache, python script, and skill file.
-#   7. Stage only en/ docs and workflow files.
-#   8. Push the clean branch to the fork.
-#   9. Create a cross-repository PR from fork to upstream (GITHUB_TOKEN).
+#      Restore any fork-only tooling deleted by old PRs, then push back.
+#   3. Run translation (translate_md.py).
+#   4. Commit updated .po translation memory to the fork's main.
+#   5. Create a branch from the fork's synced main, then git reset --mixed
+#      to upstream/main so fork-only files stay in the working tree but
+#      are never staged.
+#   6. Stage only en/ docs.
+#   7. Push the clean branch to the fork.
+#   8. Create a cross-repository PR from fork to upstream (GITHUB_TOKEN).
 
 name: Auto Doc Translate
 
@@ -165,13 +167,16 @@ jobs:
           # brought deletions of translate_md.py and skill.md into
           # upstream's history (via the merged PR). Every subsequent
           # merge of upstream into fork re-applies those deletions.
-          # We search the git history for the commit that originally
-          # added each file and restore it from there.
+          # We search the current branch history for the commit that
+          # originally added each file and restore it from there.
+          # This block only runs when the files are actually missing;
+          # once the historical damage is confirmed healed, this entire
+          # block can be removed.
           for fork_file in \
             .github/workflows/scripts/translate_md.py \
             .agent/skills/translate-ascend/skill.md; do
             if [ ! -f "$fork_file" ]; then
-              restore_commit=$(git log --all --diff-filter=A --format='%H' -- "$fork_file" | head -1)
+              restore_commit=$(git log --diff-filter=A --format='%H' -- "$fork_file" | head -1)
               if [ -n "$restore_commit" ]; then
                 git checkout "$restore_commit" -- "$fork_file"
                 echo "Restored $fork_file from commit $restore_commit"
@@ -204,7 +209,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install openai
+        run: pip install 'openai>=1.0,<2.0'
 
       # -----------------------------------------------------------------
       # Step 4: Clean stale translation memory for full translation.
@@ -390,14 +395,16 @@ jobs:
           # in the commit.
           git reset --mixed "upstream/${TARGET_BRANCH}"
 
-          # Stage only the en/ docs and workflow files.
+          # Stage only the en/ docs. Do NOT stage workflow files —
+          # translation PRs should only carry English documentation.
+          # Do NOT use "git add .github/workflows/" — that would recursively
+          # stage fork-only files (e.g. scripts/translate_md.py) that exist
+          # in the working tree but not in upstream/main after the reset.
           git add docs/ascend_tutorial/en/
-          git add .github/workflows/
 
-          # Safety net 1: no additions/modifications outside en/ docs and
-          # workflows/.
+          # Safety net 1: no additions/modifications outside en/ docs.
           leaked=$(git diff --cached --diff-filter=AM --name-only \
-            | grep -vE '^(docs/ascend_tutorial/en/|\.github/workflows/)' || true)
+            | grep -vE '^docs/ascend_tutorial/en/' || true)
           if [ -n "${leaked}" ]; then
             echo "::error::Unexpected path(s) staged for the pull request: ${leaked}"
             exit 1
