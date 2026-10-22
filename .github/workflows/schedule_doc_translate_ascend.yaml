@@ -496,12 +496,22 @@ jobs:
             # A PR already exists for this head/base pair. Update its title
             # and body so it reflects the latest translation run instead of
             # silently failing and leaving a stale PR.
-            EXISTING_PR=$(gh pr list \
-              --repo "${{ github.repository }}" \
-              --base "${TARGET_BRANCH}" \
-              --head "${PR_HEAD}" \
-              --state open \
-              --json number --jq '.[0].number' 2>/dev/null || true)
+            #
+            # gh pr list --head fails to resolve cross-repo head refs when
+            # the GITHUB_TOKEN cannot access the (private) fork repo, so we
+            # fall back to the GitHub REST API which queries the upstream
+            # repo's pull list and can resolve the head owner:branch pair
+            # without needing access to the fork.
+            EXISTING_PR=$(curl -sS \
+              -H "Authorization: token ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/pulls?state=open&head=${PR_HEAD//\//%2F}&base=${TARGET_BRANCH}" \
+              | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          if isinstance(data, list) and data:
+              print(data[0]['number'])
+          " 2>/dev/null || true)
             if [ -n "${EXISTING_PR}" ]; then
               gh pr edit "${EXISTING_PR}" \
                 --repo "${{ github.repository }}" \
