@@ -8,7 +8,6 @@
 
 - 2026/06/30：新增覆盖四种常用训推后端组合，便于用户在 quickstart 阶段快速选择合适的启动脚本。
 - 2026/05/13：将 quick start 和 install guidance 分开。
-- 2025/12/11：verl 存量场景目前支持自动识别 NPU 设备类型，GPU 脚本在昇腾上运行，原则上不再需要显式设置 ``trainer.device=npu`` 参数，新增特性通过设置 ``trainer.device`` 仍可优先使用，逐步适配自动识别能力。
 
 
 目录
@@ -43,8 +42,6 @@
 - 环境入口：verl 入口是否可用；
 - 数据读取：GSM8K数据集是否正确解析；
 - 组件初始化：actor、rollout、reference worker 是否能初始化；
-- 模型推理：vLLM-Ascend/sglang rollout 是否能生成；
-- 端到端链路：训练流程是否能完成首个 step。
   
 配置提示：
 
@@ -54,7 +51,7 @@
 环境准备
 ~~~~~~~~~~~~~~~
 
-运行本文脚本前，请确认已完成 verl Ascend 环境安装。环境安装详见 `昇腾安装指南 <./install_guidance.rst>`_ 。
+运行本文脚本前，测试测试请确认已完成 verl Ascend 环境安装。环境安装详见 `昇腾安装指南 <./install_guidance.rst>`_ 。
 
 权重准备
 ~~~~~~~~~~~~~~~
