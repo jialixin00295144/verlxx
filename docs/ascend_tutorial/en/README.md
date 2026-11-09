@@ -1,7 +1,7 @@
 # Ascend Tutorial
 ## Introduction
 
-Ascend fully supports the use and development of verl. This document comprehensively describes how to use verl on Huawei Ascend chip NPUs.
+Ascend fully supports using and developing verl. This document comprehensively describes how to use verl on Huawei Ascend chip NPUs.
 
 Last updated: 05/14/2026.
 
@@ -21,49 +21,49 @@ zh/
 - [verl on Ascend 2026Q2 roadmap](https://github.com/verl-project/verl/issues/5526) - 2026Q2 roadmap released
 
 ## Quick start
-- [Ascend image description](./get_start/dockerfile_build_guidance.rst) - Build and use a Docker image for the Ascend environment  
-- [Ascend installation guide](./get_start/install_guidance.rst) - Customize the verl installation on an Ascend NPU                                                    
-- [Ascend quick start guide](./get_start/quick_start.rst) - Get started quickly with running verl on an Ascend NPU
+- [Ascend image guide](./get_start/dockerfile_build_guidance.rst) - Build and use Docker images for an Ascend environment  
+- [Ascend installation guide](./get_start/install_guidance.rst) - Customize the verl installation on Ascend NPUs                                                    
+- [Ascend quick start guide](./get_start/quick_start.rst) - Get started quickly with running verl on Ascend NPUs
 
 ## Supported Features
 
-- [Training Configuration Parameters and Metrics](./dev_guide/model_dev/parameter_and_metrics.md) - List of supported verl framework features/parameters
-- [NPU Advanced Features Guide](./feature_support/npu_advance_features.md) - Description of common NPU-related features and environment variables
+- [Training configuration parameters and metrics description](./dev_guide/model_dev/parameter_and_metrics.md) - List of supported verl framework features and parameters
+- [NPU advanced features guide](./feature_support/npu_advance_features.md) - Description of common NPU-related features and environment variables
 
-## Model Support
+## Supported Models
 
-- [NPU model and algorithm support](./model_support/model_and_algorithm_support.md) - List of supported models and algorithms
-- [Best practice examples](./model_support/examples) - Examples of best practices and model deployment
-
-
-## Developer Guide
-
-- [Model Development](./dev_guide/model_dev) 
-    - [Model Migration to NPU Guide](./dev_guide/model_dev/transfer_to_npu_guide.md) - Model migration guide
-    - [Training Configuration Parameters and Metrics](./dev_guide/model_dev/parameter_and_metrics.md) - Training parameters and metrics
-    - [Model Evaluation](./dev_guide/model_dev/evaluation.md) - Model evaluation guide
-- [Precision Debugging](./dev_guide/precision_analysis) 
-    - [Precision Alignment Guide](./dev_guide/precision_analysis/precision_alignment.md) - Precision alignment guide
-    - [Precision Debugger](../en/dev_guide/precision_analysis/precision_debugger.md) - Precision issue troubleshooting tool
-- [Performance Tuning](./dev_guide/performance) 
-    - [Ascend Performance Analysis Guide](./dev_guide/performance/ascend_performance_analysis_guide.md) - Performance analysis guide
-    - [Ascend Performance Tuning Guide](./dev_guide/performance/perf_tuning_on_ascend.rst) - Performance tuning guide
-    - [Profiling Collection Guide](./dev_guide/performance/ascend_profiling.rst) - Profiling tool usage guide
+- [NPU Model and Algorithm Support](./model_support/model_and_algorithm_support.md) - List of supported models/algorithms
+- [Best Practice Examples](https://github.com/verl-project/verl/tree/main/docs/ascend_tutorial/zh/model_support/examples) - Best practices and model deployment examples
 
 
-## Support and Feedback
+## Development Guide
 
-If you encounter any issues during use, you can seek help through the following methods:
+- [Model development](https://github.com/verl-project/verl/tree/main/docs/ascend_tutorial/zh/dev_guide/model_dev)
+    - [Model migration to NPU guide](./dev_guide/model_dev/transfer_to_npu_guide.md) - Model migration guide
+    - [Training configuration parameters and metrics description](./dev_guide/model_dev/parameter_and_metrics.md) - Training parameters and metrics
+    - [Model evaluation](./dev_guide/model_dev/evaluation.md) - Model evaluation guide
+- [Precision debugging](https://github.com/verl-project/verl/tree/main/docs/ascend_tutorial/zh/dev_guide/precision_analysis)
+    - [Precision alignment guide](./dev_guide/precision_analysis/precision_alignment.md) - Precision alignment guide
+    - [Precision debugger](../en/dev_guide/precision_analysis/precision_debugger.md) - Precision troubleshooting tool
+- [Performance tuning](https://github.com/verl-project/verl/tree/main/docs/ascend_tutorial/zh/dev_guide/performance)
+    - [Ascend performance analysis guide](./dev_guide/performance/ascend_performance_analysis_guide.md) - Performance analysis guide
+    - [Ascend performance tuning guide](./dev_guide/performance/perf_tuning_on_ascend.rst) - Performance tuning guide
+    - [Profiling collection guide](./dev_guide/performance/ascend_profiling.rst) - Profiling tool usage guide
+
+
+## Support and feedback
+
+If you encounter any issues during use, you can get help through the following methods:
 
 1. View the [NPU FAQ](./faq/faq.rst)
 2. Submit an issue in GitHub Issues
 3. Contact Ascend technical support
 
-## Contribution guidelines
-- [verl community contribution](../../contributing) - verl community contribution guidelines
-- [NPU-CI addition guide](./contribution_guide/ascend_ci_guide.rst) - Ascend environment CI configuration and testing
+## Contribution Guide
+- [verl Community Contribution](https://github.com/verl-project/verl/blob/main/CONTRIBUTING.md) - verl community contribution guide
+- [NPU-CI Addition Guide](./contribution_guide/ascend_ci_guide.rst) - Ascend environment CI configuration and testing
 
 ## Related resources
 
 - [verl official documentation](https://verl.readthedocs.io/)
-- [Ascend Developer Community](https://www.hiascend.com/)
+- [Ascend developer community](https://www.hiascend.com/)

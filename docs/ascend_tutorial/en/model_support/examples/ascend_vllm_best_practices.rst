@@ -8,28 +8,28 @@ Last updated: 06/06/2026.
 Introduction
 ----------------------------------
 
-vLLM is a mainstream high-performance open-source inference engine. Ascend NPU fully supports this inference engine natively in verl. You can complete the environment setup through a simple build process. This guide provides two classic use cases to help you understand the following:
+vLLM is a mainstream high-performance open-source inference engine. Ascend fully natively supports this inference engine for use in verl. With a simple build process, developers can complete the environment setup. This guide provides two classic use cases to help developers understand the following:
 
 1. Environment setup
 2. Model training and evaluation 
 3. Performance collection
 
-The use case model scripts and their hardware requirements are as follows:
+The use case model scripts and their required hardware conditions are as follows:
 
-- Note: verl recently performed script cleanup and naming changes. To avoid broken links, build based on the corresponding documentation `doclink`_ and scripts for commit id c98cb8cc.
+- Note: verl recently performed script cleanup and naming changes. To avoid broken links, we recommend that you build based on the documentation `doclink`_ and the corresponding scripts for commit id c98cb8cc.
 
-+----------------------+---------------------+-----------------+--------------------------------+
-| Model                | NPU Model           | Number of Nodes | Training and Inference Backend |
-+======================+=====================+=================+================================+
-| `Qwen3-30B`_         | Atlas 800T A3       | 1               | vLLM + Megatron                |
-+----------------------+---------------------+-----------------+--------------------------------+
++----------------------+---------------------+------------+------------------------------+
+| Model                | NPU Model           | Node Count | Training/Inference Backend   |
++======================+=====================+============+==============================+
+| `Qwen3-30B`_         | Atlas 800T A3       | 1          | vLLM + Megatron              |
++----------------------+---------------------+------------+------------------------------+
 
 
-Building the environment
+Environment Setup
 -----------------------------------
-The `Ascend Installation Guide <../../get_start/install_guidance.rst>`_ provides two methods for building the environment: 1. Building from a Dockerfile image 2. Building from a custom Conda environment
+The :doc:`Ascend Installation Guide <../../get_start/install_guidance>` provides two methods for building the environment: 1. Build from a Dockerfile 2. Build from a custom Conda environment
 
-In this practice, you additionally specify the verl commit ID to avoid introducing other issues.
+In this practice, we additionally specify the verl commit ID to avoid introducing other issues.
 
 .. code-block:: bash
 
@@ -38,12 +38,12 @@ In this practice, you additionally specify the verl commit ID to avoid introduci
 Model Training and Evaluation
 -----------------------------------
 1. Model Data Preparation
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 `Qwen3-30B`_
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 **Download Model Weights**
 
---local-dir: The path to save the model
+--local-dir: Model save path
 
 .. code-block:: bash
 
@@ -56,7 +56,7 @@ Model Training and Evaluation
 
   git clone https://www.modelscope.cn/datasets/modelscope/gsm8k.git
 
-**HuggingFace To Megatron Weight Conversion (Optional)**
+**HuggingFace to Megatron weight conversion (optional)**
 
 .. code-block:: bash
 
@@ -64,7 +64,7 @@ Model Training and Evaluation
       --hf_model_path Qwen/Qwen3-30B-A3B-Base \
       --output_path Qwen/Qwen3-30B-A3B-Base-mcore \
       --use_cpu_initialization    # Only work for MoE models
-*Note: verl currently supports using mbridge for flexible weight conversion between hf and mcore. You can modify the following related parameters to directly load hf weights.*
+*Note: verl currently supports mbridge for flexible weight conversion between hf and mcore. You can modify the following related parameters to directly load hf weights.*
 
 .. code-block:: bash
 
@@ -87,10 +87,10 @@ Modify the following parameters in the model training script based on your actua
     TRAIN_FILE=$RAY_DATA_HOME/dataset/gsm8k/test.parquet
     TEST_FILE=$RAY_DATA_HOME/dataset/gsm8k/test.parquet
 
-    # Save frequency. -1 means no saving by default. If you need to evaluate, modify this parameter.
+    #Save frequency. -1 means no saving by default. If you need to evaluate, modify this parameter.
     trainer.save_freq=-1
 
-For single-machine tasks `Qwen3-30B`_, you can directly run the sample script from the verl repository using bash, for example:
+For single-machine tasks `Qwen3-30B`_, you can directly run the sample scripts from the verl repository using bash, such as:
 
 .. code-block:: bash 
 
@@ -104,7 +104,7 @@ If you want to scale to multiple nodes, we recommend using the following script 
   rm -rf /tmp/ray
   export RAY_DEDUP_LOGS=0
   export HYDRA_FULL_ERROR=1
-  # TASK_QUEUE_ENABLE, dispatch optimization, set to 1 for graph mode, set to 2 for non-graph mode
+  # TASK_QUEUE_ENABLE: dispatch optimization. Set to 1 for graph mode, and 2 for non-graph mode.
   export TASK_QUEUE_ENABLE=1
   export HCCL_ASYNC_ERROR_HANDLING=0
   export HCCL_EXEC_TIMEOUT=3600
@@ -114,7 +114,7 @@ If you want to scale to multiple nodes, we recommend using the following script 
   export HCCL_NPU_SOCKET_PORT_RANGE=61000-61050
   export RAY_EXPERIMENTAL_NOSET_ASCEND_RT_VISIBLE_DEVICES=1
   export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-  # Change to the path of the use case you need to run
+  # Modify to the path of the use case you need to run
   DEFAULT_SH="./run_*.sh"
   echo "Use $DEFAULT_SH"
 
@@ -129,7 +129,7 @@ If you want to scale to multiple nodes, we recommend using the following script 
   SOCKET_IFNAME="Your SOCKET IFNAME"
   export HCCL_SOCKET_IFNAME="SOCKET IFNAME FOR CURRENT NODE"
   export GLOO_SOCKET_IFNAME="SOCKET IFNAME FOR CURRENT NODE"
-  # Get the current IP
+  # Obtain the current IP
   CURRENT_IP=$(ifconfig $SOCKET_IFNAME | grep -Eo 'inet (addr:)?([0-9]{1,3}\.){3}[0-9]{1,3}' | awk '{print $NF}')
   if [ "$MASTER_ADDR" = "$CURRENT_IP" ]; then
     # Start the master node
@@ -172,11 +172,11 @@ If you want to scale to multiple nodes, we recommend using the following script 
 
   sleep 600
 
-DEFAULT_SH: Change this to the path of the sh configuration file used for training.
+DEFAULT_SH: Modify this to the path of the configuration sh file used for training.
 
-NNODES and NPUS_PER_NODE: Modify them to use the number of nodes and the number of NPUs per node. In this case, they are 2 and 8, respectively.
+NNODES and NPUS_PER_NODE: Modify them to use the number of nodes and the number of NPUs per node. In this case, they are 2 and 8 respectively.
 
-MASTER_ADDR: Change it to the IP address of the corresponding master node. That is, the MASTER_ADDR of all nodes should be the same.
+MASTER_ADDR: Change it to the IP address of the master node. That is, the MASTER_ADDR of all nodes should be the same.
 
 SOCKET_IFNAME, HCCL_SOCKET_IFNAME, GLOO_SOCKET_IFNAME: Change to the corresponding communication network interface. You can obtain the communication network interface using the following command:
 
@@ -184,12 +184,12 @@ SOCKET_IFNAME, HCCL_SOCKET_IFNAME, GLOO_SOCKET_IFNAME: Change to the correspondi
 
   ifconfig |grep "$(hostname -I |awk '{print $1}'|awk -F '.' '{print $0}')" -B 1|awk -F ':' '{print$1}' | head -1 | tail -1
 
-3. Model Evaluation
-^^^^^^^^^^^^^^^^^^^
+3. Model evaluation
+^^^^^^^^^^^^^^^^^^^^
 
-The steps are the same for different models. Qwen3-30b is used as an example.
+The steps are the same for different models. This section lists them using Qwen3-30b as an example.
 
-We use AISBenchmark to evaluate the model. This tool supports the evaluation of multiple inference backends, such as vllm and sglang.
+We evaluate the model using AISBenchmark. This tool supports evaluation across multiple inference backends, including vllm and sglang.
 
 **Installation method**
 
@@ -217,7 +217,7 @@ We use AISBenchmark to evaluate the model. This tool supports the evaluation of 
 
    vim /examples/benchmark/ais_bench/benchmark/configs/models/vllm_api/vllm_api_general.py
 
-The content of the Python file is as follows. The host_port must match the server port. Modify max_seq_len and max_out_len based on the model configuration. For the inference example, set the input to 2k and the output to 20k:
+The Python file content is as follows. The host_port must match the server port. Modify max_seq_len and max_out_len based on the model configuration. The inference example is set to 2k input and 20k output:
 
 .. code-block:: bash
 
@@ -251,12 +251,12 @@ The content of the Python file is as follows. The host_port must match the serve
 
 **Start the vllm_server service**
 
-Start the NPU server using the following command. You need to modify the model and tensor-parallel-size parameters.
+Start the NPU server using the following command. The parameters to modify are model and tensor-parallel-size.
 
-/path/to/Qwen3-30B/: The Hugging Face model path where the trained weights are saved;
-tensor-parallel-size: The number of tensor parallelism replicas. We recommend that you keep the TP configuration consistent with the infer configuration during training;
-data-parallel-size: The number of data parallelism replicas. We recommend that you keep the DP configuration consistent with the infer configuration during training. The default value is 1;
-port: You can set this to any idle port;
+`/path/to/Qwen3-30B/`: The Hugging Face model path that stores the post-training weights.
+tensor-parallel-size: The number of tensor parallelism replicas. It is recommended that TP remains consistent with the infer configuration during training.
+data-parallel-size: The number of data parallelism replicas. It is recommended that DP remains consistent with the infer configuration during training. The default value is 1.
+port: You can set any idle port.
 
 .. code-block:: bash
 
@@ -276,7 +276,7 @@ port: You can set this to any idle port;
       --port 6380
 
 
-**Start the vllm_client evaluation**
+**Start vllm_client evaluation**
 
 .. code-block:: bash
 
@@ -284,7 +284,7 @@ port: You can set this to any idle port;
   ais_bench --models vllm_api_general --datasets aime2024_gen
 
 
-**Evaluation Results**
+**Evaluation results**
 
 After training, the model's score on aime2024 increases significantly.
 
@@ -298,8 +298,8 @@ After training, the model's score on aime2024 increases significantly.
 
 Performance Profiling
 -----------------------------------
-For detailed documentation on NPU profiling, refer to `Profiling Guide <../../dev_guide/performance/ascend_profiling.rst>`_.
+For detailed documentation about NPU profiling, refer to :doc:`Profiling Guide <../../dev_guide/performance/ascend_profiling>`
 
 After data collection is complete, you can use `MindStudio Insight <https://www.hiascend.com/document/detail/zh/mindstudio/830/GUI_baseddevelopmenttool/msascendinsightug/Insight_userguide_0002.html>`_ to parse the data.
 
-Note: Collecting full profiling on the verl framework side generates massive and duplicate operator records. You can modify the code according to the documentation to collect only key stages.
+Note: Collecting full Profiling on the verl framework side generates a massive number of duplicated operator records. You can modify the code according to the documentation to collect only key stages.

@@ -8,27 +8,27 @@ Last updated: 06/02/2026.
 Introduction
 ----------------------------------
 
-SGLang is a mainstream high-performance open-source inference engine. Ascend NPU now provides full native support for using this inference engine in verl. With a simple build process, developers can complete the environment setup. This guide helps developers understand the following:
+SGLang is a mainstream high-performance open-source inference engine. Ascend fully natively supports using this inference engine in verl. Developers can complete the environment setup with a simple build process. This guide helps developers understand the following:
 
 1. Environment setup
 2. Model training and evaluation
-3. Performance collection
+3. Performance data collection
 
-The use case model scripts and their hardware requirements are as follows:
+The sample model scripts and their required hardware conditions are as follows:
 
-- Note: verl recently performed script cleanup and naming changes. To avoid broken links, build using the documentation `doclink`_ and scripts for commit id c98cb8cc.
+- Note: verl recently cleaned up and renamed scripts; to avoid broken links, build using the documentation `doclink`_ and corresponding scripts for commit id c98cb8cc.
 
-+----------------------+---------------------+------------------+--------------------------------+
-| Model                | NPU Model           | Number of Nodes  | Training and Inference Backend |
-+======================+=====================+==================+================================+
-| `Qwen3-30B`_         | Atlas 800T A3       | 1                | SGLang + Megatron              |
-+----------------------+---------------------+------------------+--------------------------------+
++----------------------+---------------------+----------+------------------------+
+| Model                | NPU Model           | Nodes    | Training/Infer Backend |
++======================+=====================+==========+========================+
+| `Qwen3-30B`_         | Atlas 800T A3       | 1        | SGLang + Megatron      |
++----------------------+---------------------+----------+------------------------+
 
-Environment Setup
+Building the Environment
 -----------------------------------
-The `Ascend Installation Guide <../../get_start/install_guidance.rst>`_ provides two methods for building the environment: 1. Build from a Dockerfile 2. Build from a custom Conda environment
+The :doc:`Ascend Installation Guide <../../get_start/install_guidance>` provides two methods for building the environment: 1. Build from a Dockerfile 2. Build from a custom Conda environment
 
-In this practice, we specify the verl commit ID to avoid introducing other issues.
+In this practice, explicitly specify the verl commit ID to avoid introducing other issues.
 
 .. code-block:: bash
 
@@ -37,12 +37,12 @@ In this practice, we specify the verl commit ID to avoid introducing other issue
 Model Training and Evaluation
 -----------------------------------
 1. Model Data Preparation
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 `Qwen3-30B`_
 ^^^^^^^^^^^^
 **Download Model Weights**
 
---local-dir: The path to save the model
+--local-dir: Path to save the model
 
 .. code-block:: bash
 
@@ -55,7 +55,7 @@ Model Training and Evaluation
 
   git clone https://www.modelscope.cn/datasets/AI-ModelScope/DAPO-Math-17k.git
 
-**HuggingFace To Megatron Weight Conversion (Optional)**
+**HuggingFace To Megatron weight conversion (optional)**
 
 .. code-block:: bash
 
@@ -63,7 +63,7 @@ Model Training and Evaluation
       --hf_model_path Qwen/Qwen3-30B-A3B \
       --output_path Qwen/Qwen3-30B-A3B-mcore \
       --use_cpu_initialization    # Only work for MoE models
-*Note: verl performs weight conversion between HF and mcore through Megatron-Bridge and MindSpeed-Bridge. You can modify the following related parameters to directly load HF weights.*
+*Note: verl converts weights between the hf and mcore formats using Megatron-Bridge and MindSpeed-Bridge. You can modify the following related parameters to directly load hf weights.*
 
 .. code-block:: bash
 
@@ -86,7 +86,7 @@ Modify the following parameters in the model training script based on your actua
     TRAIN_FILE=$RAY_DATA_HOME/dataset/dapo-math-17k.parquet
     TEST_FILE=$RAY_DATA_HOME/dataset/aime-2024.parquet
 
-    # Save frequency. -1 means do not save by default. If you need to evaluate, modify this parameter.
+    # Save frequency. -1 means no saving by default. If you need to perform evaluation, modify this parameter.
     trainer.save_freq=-1
 
 For single-machine tasks `Qwen3-30B`_, you can directly run the sample script from the verl repository using bash.
@@ -103,7 +103,7 @@ If you want to scale to multiple nodes, we recommend using the following script 
   rm -rf /tmp/ray
   export RAY_DEDUP_LOGS=0
   export HYDRA_FULL_ERROR=1
-  # TASK_QUEUE_ENABLE: dispatch optimization. Set to 1 for graph mode, 2 for non-graph mode
+  # TASK_QUEUE_ENABLE: dispatch optimization. Set to 1 in graph mode, and set to 2 in non-graph mode.
   export TASK_QUEUE_ENABLE=1
   export HCCL_ASYNC_ERROR_HANDLING=0
   export HCCL_EXEC_TIMEOUT=3600
@@ -113,7 +113,7 @@ If you want to scale to multiple nodes, we recommend using the following script 
   export HCCL_NPU_SOCKET_PORT_RANGE=61000-61050
   export RAY_EXPERIMENTAL_NOSET_ASCEND_RT_VISIBLE_DEVICES=1
   export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-  # Modify to the path of the use case you want to run
+  # Modify to the path of the use case you need to run
   DEFAULT_SH="./run_*.sh"
   echo "Use $DEFAULT_SH"
 
@@ -122,13 +122,13 @@ If you want to scale to multiple nodes, we recommend using the following script 
 
   NNODES=2
   NPUS_PER_NODE=8
-  # Change to the IP address of the corresponding master node
+  # Change to the IP address of the master node
   MASTER_ADDR="IP FOR MASTER NODE"
-  # Change to the communication network interface of the current node
+  # Change to the communication network interface card of the current node
   SOCKET_IFNAME="Your SOCKET IFNAME"
   export HCCL_SOCKET_IFNAME="SOCKET IFNAME FOR CURRENT NODE"
   export GLOO_SOCKET_IFNAME="SOCKET IFNAME FOR CURRENT NODE"
-  # Get the current IP address
+  # Obtain the current IP address
   CURRENT_IP=$(ifconfig $SOCKET_IFNAME | grep -Eo 'inet (addr:)?([0-9]{1,3}\.){3}[0-9]{1,3}' | awk '{print $NF}')
   if [ "$MASTER_ADDR" = "$CURRENT_IP" ]; then
     # Start the master node
@@ -152,9 +152,9 @@ If you want to scale to multiple nodes, we recommend using the following script 
         fi
     done
   else
-    # The worker node attempts to register Ray with the master node until successful
+    # The worker node attempts to register ray with the master node until successful
     while true; do
-        # Attempt to connect to the Ray cluster
+        # Attempt to connect to the ray cluster
         ray start --address="$MASTER_ADDR:6766" --resources='{"NPU": '$NPUS_PER_NODE'}' --node-ip-address=$CURRENT_IP
 
         # Check whether the connection is successful
@@ -171,24 +171,24 @@ If you want to scale to multiple nodes, we recommend using the following script 
 
   sleep 600
 
-DEFAULT_SH: Change this to the path of the sh configuration file used for training.
+DEFAULT_SH: Change to the path of the configuration sh file used for training.
 
 NNODES and NPUS_PER_NODE: Modify them to use the number of nodes and the number of NPUs per node. In this case, they are 2 and 8, respectively.
 
-MASTER_ADDR: Change this to the IP address of the master node. That is, the MASTER_ADDR should be the same for all nodes.
+MASTER_ADDR: Change to the IP address of the corresponding master node. That is, the MASTER_ADDR of all nodes should be the same.
 
-SOCKET_IFNAME, HCCL_SOCKET_IFNAME, GLOO_SOCKET_IFNAME: Change to the corresponding communication NIC. You can obtain the communication NIC using the following command:
+SOCKET_IFNAME, HCCL_SOCKET_IFNAME, GLOO_SOCKET_IFNAME: Change to the corresponding communication network interface. You can obtain the communication network interface using the following command:
 
 .. code-block:: bash
 
   ifconfig |grep "$(hostname -I |awk '{print $1}'|awk -F '.' '{print $0}')" -B 1|awk -F ':' '{print$1}' | head -1 | tail -1
 
-3. Model evaluation
-^^^^^^^^^^^^^^^^^^^
+3. Model Evaluation
+^^^^^^^^^^^^^^^^^^
 
-The steps are the same for different models. This section lists them using Qwen3-30b as an example.
+The steps are the same for different models. This section uses Qwen3-30b as an example.
 
-We evaluate the model using AISBenchmark. This tool supports evaluation with multiple inference backends, such as vllm/sglang.
+We evaluate the model using AISBenchmark. This tool supports evaluating multiple inference backends, including vllm and sglang.
 
 **Installation method**
 
@@ -210,7 +210,7 @@ We evaluate the model using AISBenchmark. This tool supports evaluation with mul
 
 **Modify the AISBench configuration code to enable sglang inference evaluation**
 
-Open the `benchmark/ais_bench/benchmark/configs/models/vllm_api/vllm_api_stream_chat.py` file. This is the inference configuration file.
+Open the benchmark/ais_bench/benchmark/configs/models/vllm_api/vllm_api_stream_chat.py file. This is the inference configuration file.
 
 .. code-block:: bash
 
@@ -233,7 +233,7 @@ Open the `benchmark/ais_bench/benchmark/configs/models/vllm_api/vllm_api_stream_
             max_out_len = 8192,  # Maximum output token length
             batch_size=48, # Maximum concurrency for inference
             trust_remote_code=False,
-            custom_client=dict(type=OpenAIChatStreamSglangClient), #Use the sglang client
+            custom_client=dict(type=OpenAIChatStreamSglangClient), # Use the sglang client
             generation_kwargs = dict(
                 temperature = 0,
                 seed = 1234,
@@ -243,7 +243,7 @@ Open the `benchmark/ais_bench/benchmark/configs/models/vllm_api/vllm_api_stream_
     ]
 
 
-**Starting the sglang_server service**
+**Start the sglang_server service**
 
 .. code-block:: bash
 
@@ -257,7 +257,7 @@ Open the `benchmark/ais_bench/benchmark/configs/models/vllm_api/vllm_api_stream_
 
 **Evaluation results**
 
-After training, the model's score on Math-500 improves significantly.
+After training, the model's score on Math-500 significantly increases.
 
 +------+----------------------+---------+----------+------+----------------------+
 | iter | dataset              | version | metric   | mode | sgl-api-stream-chat  |
@@ -269,10 +269,10 @@ After training, the model's score on Math-500 improves significantly.
 
 Performance Profiling
 -----------------------------------
-For detailed documentation about NPU profiling, refer to the `Profiling Collection Guide <../../dev_guide/performance/ascend_profiling.rst>`_.
+For detailed documentation about NPU profiling, refer to :doc:`Profiling Guide <../../dev_guide/performance/ascend_profiling>`
 
-The script for `Qwen3-30B`_ provides a basic performance data collection option, PROF_CONFIG. By default, it sets `global_profiler.steps=null` to disable collection. Developers can modify the parameters based on actual needs.
+The script for `Qwen3-30B`_ provides the basic performance collection option PROF_CONFIG. By default, it sets global_profiler.steps=null to disable collection. You can modify the parameters based on actual requirements.
 
-After data collection is complete, developers can use `MindStudio Insight <https://www.hiascend.com/document/detail/zh/mindstudio/830/GUI_baseddevelopmenttool/msascendinsightug/Insight_userguide_0002.html>`_ to parse the data.
+After data collection is complete, you can use `MindStudio Insight <https://www.hiascend.com/document/detail/zh/mindstudio/830/GUI_baseddevelopmenttool/msascendinsightug/Insight_userguide_0002.html>`_ to parse the data.
 
-Note: Collecting full Profiling in the verl framework generates massive and duplicate operator records. You can modify the code according to the documentation to collect only key stages.
+Note: Collecting full profiling on the verl framework side generates a massive number of duplicate operator records. You can modify the code according to the documentation to collect only key stages.

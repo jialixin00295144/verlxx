@@ -3,7 +3,7 @@ NPU Frequently Asked Questions
 
 Last updated: 05/13/2026.
 
-This document summarizes common issues and solutions encountered when running VERL training and inference on NPUs.
+This document summarizes common issues and solutions encountered when performing VERL training and inference on the NPU.
 
 Environment configuration issues
 --------------------------------
@@ -19,7 +19,7 @@ Environment configuration issues
    # Check device visibility
    echo $ASCEND_RT_VISIBLE_DEVICES
 
-   # Set visible devices and disable automatic Ray settings
+   # Set visible devices and disable ray automatic setting
    export ASCEND_RT_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
    export RAY_EXPERIMENTAL_NOSET_ASCEND_RT_VISIBLE_DEVICES=1
 
@@ -29,7 +29,7 @@ Environment configuration issues
 Debugging and Diagnostics
 -------------------------
 
-### Q1: How do I enable NPU performance profiling?
+### Q1: How do I enable NPU profiling?
 
 Use the VERL built-in profiler:
 
@@ -40,7 +40,7 @@ Use the VERL built-in profiler:
    actor_rollout_ref.actor.profiler.tool_config.npu.level=1 \
    actor_rollout_ref.actor.profiler.tool_config.npu.analysis=true
 
-### Q2: How do I troubleshoot NPU training failures?
+### Q2: How to troubleshoot NPU training failures?
 
 **Troubleshooting steps**:
 
@@ -48,9 +48,9 @@ Use the VERL built-in profiler:
 2. Verify the device visibility.
 3. Check the CANN version compatibility.
 4. View the specific error messages in the logs.
-5. Use a minimal example to reproduce the issue.
+5. Reproduce the issue using a minimal example.
 
-**Enable detailed logs**:
+**Enable verbose logging**:
 
 .. code-block:: bash
 
@@ -61,17 +61,17 @@ Use the VERL built-in profiler:
    export ASCEND_GLOBAL_LOG_LEVEL=0
    export ASCEND_SLOG_PRINT_TO_STDOUT=1
 
-   # HCCL communication logs
+   # HCCL communication log
    export HCCL_DEBUG=INFO
 
-Common error messages
+Common Error Messages
 ---------------------
 
 ### Q1： "torch_npu detected, but NPU device is not available or visible"
 
-**Cause**: The NPU driver is not installed correctly or the device is not visible.
+**Cause**: The NPU driver is not installed correctly, or the device is not visible.
 
-**Solution**: Check the driver installation status and the ASCEND_RT_VISIBLE_DEVICES setting
+**Solution**: Check the driver installation status and the ASCEND_RT_VISIBLE_DEVICES setting.
 
 ### Q2： "KeyError: decoder.layers.0.self_attention.q_layernorm.weight"
 
@@ -88,19 +88,19 @@ Common error messages
    AssertionError: Weight model.embed_tokens.weight(torch.Size([151936, 4096]), torch.float32) is too large to fit in the bucket.
    Please increase rollout.update_weights_bucket_megabytes(2048 MB).
 
-**Cause**: The size of a model weight tensor exceeds the default capacity of the weight transfer bucket (2048 MB). The verl framework transmits model weights in chunks through a bucket (buffer). When a single weight tensor exceeds the bucket size, the assertion check fails.
+**Cause**: The size of a model weight tensor exceeds the default capacity (2048 MB) of the weight transfer bucket. The verl framework transmits model weights in chunks using a bucket (buffer). When a single weight tensor exceeds the bucket size, the assertion check fails.
 
 **Weight size calculation method**:
 
-Memory usage of the weight tensor (bytes) = product of dimension sizes × bytes per element
+The memory usage (bytes) of a weight tensor = the product of the dimension sizes × the number of bytes per element
 
-The number of bytes for each data type is as follows:
+The number of bytes corresponding to each data type is as follows:
 
 - ``torch.float32`` → 4 bytes
 - ``torch.float16`` / ``torch.bfloat16`` → 2 bytes
 - ``torch.int8`` → 1 byte
 
-Take ``model.embed_tokens.weight`` in this example as an example:
+Using ``model.embed_tokens.weight`` in this example as an example:
 
 .. code-block:: text
 
@@ -108,23 +108,23 @@ Take ``model.embed_tokens.weight`` in this example as an example:
    Data type: torch.float32 (4 bytes)
    Weight size = 151936 × 4096 × 4 = 2,483,027,968 bytes ≈ 2369 MB
 
-   Default bucket size = 2048 MB < 2369 MB → triggers an assertion failure
+   The default bucket size = 2048 MB < 2369 MB → triggers an assertion failure
 
-**Solution**: When starting training, increase the ``update_weights_bucket_megabytes`` parameter so that the bucket capacity exceeds the memory usage of the largest weight tensor:
+**Solution**: When starting training, increase the ``update_weights_bucket_megabytes`` parameter so that the bucket capacity is larger than the memory usage of the largest weight tensor:
 
 .. code-block:: bash
 
    actor_rollout_ref.rollout.checkpoint_engine.update_weights_bucket_megabytes=4096
 
-**Recommended parameter values**:
+**Recommendations for selecting parameter values**:
 
-1. **Calculate the memory usage of the largest weight tensor in the model**: Iterate through all parameters of the model, find the one with the largest ``nbytes``, and convert it to MB (divide by 1024²).
+1. **Calculate the memory usage of the largest weight tensor in the model**: Iterate over all model parameters, find the one with the largest ``nbytes``, and convert it to MB (divide by 1024²).
 
-2. **Round up to the nearest power of 2**: For easier memory allocation and management, round up the calculation result to the nearest power of 2 (such as 2048, 4096, 8192, and so on). For example, if the maximum weight is 2369 MB, use 4096 MB.
+2. **Round up to the nearest power of 2**: For easier memory allocation and management, we recommend rounding the calculation result up to the nearest power of 2 (such as 2048, 4096, 8192, and so on). For example, if the maximum weight is 2369 MB, use 4096 MB.
 
-3. **Reserve an appropriate margin**: Considering memory alignment and runtime overhead, set the bucket size to at least 1.2 to 1.5 times the maximum weight size. Then, round it up to the nearest power of 2.
+3. **Reserve an appropriate margin**: To account for memory alignment and runtime overhead, set the bucket size to at least 1.2 to 1.5 times the maximum weight size. Then round the size up to the nearest power of 2.
 
-4. **Note memory limits:** The bucket size directly affects the memory usage of worker nodes. Setting it too large causes OOM. Choose a smaller value while meeting the weight transfer requirements.
+4. **Be aware of memory limits:** The bucket size directly affects the memory usage of worker nodes. Setting it too large causes OOM. Choose a smaller value while ensuring it meets the weight transmission requirements.
 
 **Recommended values for common models**:
 
@@ -144,9 +144,9 @@ Take ``model.embed_tokens.weight`` in this example as an example:
      - [152064, 8192] float32
      - 8192 MB
 
-### Q4: Checkpoint loading fails under non-shared storage; common.pt / .metadata / metadata.json cannot be found
+### Q4: Checkpoint loading fails in a non-shared storage environment, and common.pt / .metadata / metadata.json cannot be found
 
-**Symptom**: When you use the verl + Megatron backend in a multi-node environment with **non-shared storage**, saving checkpoints works normally, but an error occurs during reloading, indicating that the following files cannot be found:
+**Symptom**: When using the verl + Megatron backend in a multi-node environment with **non-shared storage**, saving checkpoints works normally, but an error occurs during reloading, indicating that the following files cannot be found:
 
 .. code-block:: text
 
@@ -154,17 +154,17 @@ Take ``model.embed_tokens.weight`` in this example as an example:
    FileNotFoundError: .metadata
    FileNotFoundError: metadata.json
 
-**Cause**: The current checkpoint mechanism does not fully support non-shared storage. Specifically, this manifests as:
+**Cause:** The current checkpoint mechanism does not fully support non-shared storage. Specifically, this manifests as:
 
-- **Distributed training weights are saved by node**. Each node saves only the sharded weights it is responsible for, and the full weights are not saved only on the master node.
-- However, metadata files such as ``common.pt``, ``.metadata``, and ``metadata.json`` **are saved only on the node performing the save operation** (usually the rank 0 node). Other nodes do not have these files locally.
-- When loading a checkpoint, each node needs to read these metadata files to restore the model state. However, without shared storage, these files do not exist in the local paths of other nodes, causing the loading to fail.
+- **Distributed training weights are saved on a per-node basis**. Each node saves only the weight shards it is responsible for, instead of saving all weights only on the master node.
+- However, metadata files such as ``common.pt``, ``.metadata``, and ``metadata.json`` **are saved only on the node performing the save operation** (usually the node where rank 0 is located). Other nodes do not have these files locally.
+- When loading the checkpoint, each node must read these metadata files to restore the model state. However, without shared storage, these files do not exist in the local paths of other nodes, causing the loading to fail.
 
-**Temporary workaround**: Manually copy the metadata file from the saving node to all other nodes:
+**Temporary workaround**: Manually copy the metadata file from the node where it is saved to all other nodes:
 
 .. code-block:: bash
 
-   # Assume the checkpoint is saved in the /path/to/ckpt/ directory on the rank 0 node
+   # Assume that the checkpoint is saved in the /path/to/ckpt/ directory on the rank 0 node
    # Copy the metadata file from the rank 0 node to all other nodes
 
    # Files to copy
@@ -181,25 +181,25 @@ Take ``model.embed_tokens.weight`` in this example as an example:
 
 **Precautions**:
 
-- Copy the metadata files again every time you save a checkpoint, because the save operation might update their contents.
-- If you save checkpoints frequently during training (for example, by steps), write a script to automatically trigger the copy after saving to avoid omissions.
-- For a long-term solution, wait for the framework to support loading checkpoints from non-shared storage, allowing metadata files to synchronize automatically to all nodes.
+- You must copy the metadata files again after each checkpoint save, because the save operation may update their contents.
+- If you frequently save checkpoints during training (for example, by steps), write a script to automatically trigger the copy after saving to avoid omissions.
+- For a long-term solution, wait for the framework to support loading checkpoints from non-shared storage, allowing metadata files to automatically synchronize to all nodes.
 
 References
-----------
+-----------
 
-- `Ascend Performance Tuning Guide <../dev_guide/performance/perf_tuning_on_ascend.rst>`_
-- `Ascend Quick Start Guide <../get_start/quick_start.rst>`_
-- `NPU-CI Addition Guide <../contribution_guide/ascend_ci_guide.rst>`_
+- :doc:`Ascend Performance Tuning Guide <../dev_guide/performance/perf_tuning_on_ascend>`
+- :doc:`Ascend Quick Start Guide <../get_start/quick_start>`
+- :doc:`NPU-CI Addition Guide <../contribution_guide/ascend_ci_guide>`
 - Ascend NPU documentation: https://www.hiascend.com/document
 - CANN toolkit documentation: https://www.hiascend.com/software/cann
 
-Getting more help
-------------------
+Get more help
+-------------
 
 If the preceding FAQ does not resolve your issue, do the following:
 
-1. View the complete error log.
-2. Search for similar issues in GitHub Issues.
-3. Provide detailed error information and environment configuration.
-4. Provide a minimal reproducible example.
+1. Check the complete error logs
+2. Search for similar issues in GitHub Issues
+3. Provide detailed error information and environment configuration
+4. Provide a minimal reproducible example

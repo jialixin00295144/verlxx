@@ -1,22 +1,22 @@
 NPU-CI Addition Guide
-=====================
+======================
 
 Last updated: 09/16/2026.
 
-We provide guidance on adding CI test cases for Huawei Ascend devices on verl.
+We provide guidance on adding CI test cases for Huawei Ascend devices in verl.
 
 The verl repository uses GitHub Actions as the CI platform and ensures code quality and system stability through a layered testing architecture.
-The NPU-related workflows mainly include:
+NPU-related workflows mainly include:
 
 * ``npu_unit_tests.yml``: Runs unit tests.
-* Files ending in ``_ascend.yml``: Run end-to-end tests or specific tests for the Ascend NPU.
+* Files ending with ``_ascend.yml``: Run end-to-end tests or specific tests for the Ascend NPU.
 
-Guide to adding new test cases
+Guide to adding new use cases
 -----------------------------------
 
-1. Dataset and weights
+1. Datasets and Weights
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The weights and their absolute paths on the pipeline machine are as follows:
+Weights and absolute paths on the pipeline machine:
 
 +---------------------------------------+-------------------------------------------------------------------------------------+
 | Model name                            | Absolute path                                                                       |
@@ -61,39 +61,39 @@ The weights and their absolute paths on the pipeline machine are as follows:
 +---------------------------------------+-------------------------------------------------------------------------------------+
 
 
-Datasets and absolute paths on the CI machine:
+Dataset and absolute path on the pipeline machine:
 
-+--------------+---------------------------------------------------+
-| Dataset name | Absolute path                                     |
-+==============+===================================================+
-| gsm8k        | ``${HOME}/.cache/datasets/openai/gsm8k``          |
-+--------------+---------------------------------------------------+
-| geo3k        | ``${HOME}/.cache/datasets/hiyouga/geometry3k``    |
-+--------------+---------------------------------------------------+
-| dapo-math-17k| ``$HOME/.cache/datasets/dapo-math-17k.parquet``   |
-+--------------+---------------------------------------------------+
++--------------+----------------------------------------------------------------+
+| Dataset name | Absolute path                                                  |
++==============+================================================================+
+| gsm8k        | ``${HOME}/.cache/modelscope/dataset/openai/gsm8k``             |
++--------------+----------------------------------------------------------------+
+| geo3k        | ``${HOME}/.cache/modelscope/dataset/hiyouga/geometry3k``       |
++--------------+----------------------------------------------------------------+
+| dapo-math-17k| ``$HOME/.cache/modelscope/dataset/dapo-math-17k.parquet``      |
++--------------+----------------------------------------------------------------+
 
 **Note**
 
    ${HOME} is root
 
-   In the GPU use cases, the weights are stored in the ~/models/ path. If you need to adapt this, use a symbolic link: ``ln -s /root/.cache/modelscope/hub/modelscope/hub/models ~/models``
+   In the GPU use cases, weights are stored in the ~/models/ path. To adapt to this, use a symbolic link: ``ln -s /root/.cache/modelscope/hub/modelscope/hub/models ~/models``
 
    The following is the original dataset. Process the data as needed. An example is as follows.
 
-   ``python examples/data_preprocess/gsm8k_multiturn_sft.py --local_dataset_path ${HOME}/.cache/datasets/openai/gsm8k``
+   ``python examples/data_preprocess/gsm8k_multiturn_sft.py --local_dataset_path ${HOME}/.cache/modelscope/dataset/openai/gsm8k``
 
 
 1. Workflow YAML Template
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you need to add a new workflow, refer to the following template to create the ``.github/workflows/your_yml_ascend.yml`` file.
+If you need to add a workflow, refer to the following template to create the ``.github/workflows/your_yml_ascend.yml`` file.
 
 The main modifications include:
 
 * Workflow name (``name``)
 * Trigger condition (``on``)
-* Running environment (``runs-on``)
+* Runtime environment (``runs-on``)
 * Container image (``container.image``)
 * Specific execution steps (``jobs.<job_id>.steps``)
 
@@ -111,16 +111,16 @@ The main modifications include:
        branches:
          - main
        paths:
-         - ".github/workflows/your_yml_ascend.yml"  # Must include this workflow file path
+         - ".github/workflows/your_yml_ascend.yml"  # Must include the path of this workflow file
          - "path/to/affected_files"               # Related code paths to monitor
 
    # Concurrency control strategy
    concurrency:
      group: ${{ github.workflow }}-${{ github.ref }}
-     cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}  # Cancel in-progress tasks only for non-main branches
+     cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}  # Cancel in-progress jobs only for non-main branches
 
    permissions:
-     contents: read  # Principle of least privilege
+     contents: read  # principle of least privilege
 
    jobs:
      your_job_name:  # Unique job identifier
@@ -129,7 +129,7 @@ The main modifications include:
        timeout-minutes: 60          # Job timeout threshold (minutes)
        container:
          # Running image. This example uses the vLLM image.
-         image: swr.ap-southeast-1.myhuaweicloud.com/base_image/ascend-ci/verl/verl:latest-cann9.0.0-torch_npu2.9.0post2-910b-ubuntu22.04-py3.11-vllm
+         image: swr.cn-south-west-2.myhuaweicloud.com/base_image/ascend-ci/verl/verl:latest-cann9.0.0-torch_npu2.9.0post2-910b-ubuntu22.04-py3.11-vllm
          options: >-
            --shm-size 16g  # Shared memory configuration
        env:
@@ -154,7 +154,7 @@ The main modifications include:
            run: pip list
          # The following are specific test steps (customize as needed)
          - name: Preprocess dataset
-           run: python examples/data_preprocess/your_script.py --local_dataset_path ${HOME}/.cache/datasets/your_dataset
+           run: python examples/data_preprocess/your_script.py --local_dataset_path ${HOME}/.cache/modelscope/dataset/your_dataset
          - name: Execute NPU test
            run: |
              ray stop --force 
@@ -163,38 +163,38 @@ The main modifications include:
 **Note**
 
 
-   Once content is added to the `${HOME}/.cache/` folder, it is not deleted when the CI run completes and the container is destroyed. Avoid adding content to this folder.
+   Once new content is added to the ${HOME}/.cache/ folder, it is not deleted when the CI run completes and the container is destroyed. Avoid adding content to this folder.
 
 
-3. Add unit tests
+3. Adding unit tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Steps:
 
-(1) Create or modify a unit test file (for example, ``test_xxx.py``) in the ``tests/`` directory.
+(1) Create or modify unit test files (for example, ``test_xxx.py``) in the ``tests/`` directory.
 (2) If the ``--ignore-glob`` rule in ``npu_unit_tests.yml`` does not exclude the test file path, the following command automatically executes it:
 
    .. code-block:: yaml
 
       pytest -s -x --ignore-glob="xxx" --ignore-glob="xxx" tests/
 
-(3) If the test path is in the ``--ignore-glob`` exclusion range, add a step to ``npu_unit_tests.yml`` to explicitly run the test.
-(4) If you add a batch of related test cases, create a dedicated workflow file to maintain clarity.
+(3) If the test path is excluded by ``--ignore-glob``, add a step in ``npu_unit_tests.yml`` to explicitly run the test.
+(4) If you add a batch of related test cases, we recommend that you create a dedicated workflow file to maintain clarity.
 
-4. Add end-to-end test scripts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+4. Add an end-to-end test script
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Steps:
 
 (1) Create an end-to-end test script in the ``tests/special_npu/`` directory.
-(2) In the ``.github/workflows/`` directory, find the workflow file ending in ``_ascend.yml`` that most closely matches the functionality, and add a step to call the script.
+(2) In the ``.github/workflows/`` directory, find the workflow file ending with ``_ascend.yml`` that best matches the functionality, and add a step in it to call the script.
 (3) If the test scenario is independent or complex, consider creating a new workflow file.
 
 5. Test Strategy Recommendations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* **Unit testing**: Covers core functions, classes, and methods to ensure logical correctness.
-* **Integration/end-to-end testing**: Covers typical training and inference pipelines to verify multi-module collaboration and hardware adaptation.
-* **Resource management**: Multiple jobs in a workflow run in parallel. Set an appropriate timeout to prevent tasks from hanging for a long time. Keep the running time of a single job within 40 minutes.
+* **Unit testing**: Cover core functions, classes, and methods to ensure correct logic.
+* **Integration/end-to-end testing**: Cover typical training and inference pipelines to verify multi-module collaboration and hardware adaptation.
+* **Resource management**: Multiple jobs in a workflow run in parallel. Set an appropriate timeout to prevent tasks from hanging for a long time, and keep the running time of a single job within 40 minutes.
 
-By following these steps, you can systematically add NPU-related automated tests to the verl repository. This ensures that code changes are fully verified before merging.
+By following the preceding steps, you can systematically add NPU-related automated tests to the verl repository to ensure that code changes are fully verified before they are merged.

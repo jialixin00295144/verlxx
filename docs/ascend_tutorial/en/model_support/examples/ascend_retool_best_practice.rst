@@ -6,27 +6,27 @@ Last updated: 07/03/2026.
 Introduction
 ----------------------------------
 
-For the ReTool paper, refer to [ReTool](https://arxiv.org/pdf/2504.11536).
-This approach integrates a code interpreter tool and deploys policies through multi-turn real-time code execution. It teaches the model to learn when and how to call the tool based on result feedback.
+Refer to the ReTool paper ([ReTool](https://arxiv.org/pdf/2504.11536)).
+ReTool integrates the code interpreter tool and deploys the policy through multi-turn real-time code execution. It teaches the model to learn when and how to call the tool based on result feedback.
 
 1. Environment setup
 2. Model training
 
-The use case model scripts and their required hardware conditions are as follows:
+The example model scripts and their required hardware conditions are as follows:
 
 .. list-table::
    :header-rows: 1
 
    * - Model
-     - NPU Model
-     - Number of Nodes
-     - Training and Inference Backend
+     - NPU model
+     - Number of nodes
+     - Training and inference backend
    * - ``Qwen2.5-7B``
      - Atlas 900 A2
      - 1
      - ``vLLM + FSDP``
 
-Environment Setup
+Building the Environment
 -----------------------------------
 1. Build from a custom Conda environment
 
@@ -54,13 +54,13 @@ Environment Setup
    * - transformers
      - ``5.3.0``
 
-Model training and evaluation
+Model Training and Evaluation
 -----------------------------------
-1. Model data preparation
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+1. Model Data Preparation
+^^^^^^^^^^^^^^^^^^^^^^^^^
 `Qwen2.5-7B`
 ^^^^^^^^^^^^
-**Download model weights**
+**Download Model Weights**
 
 .. code-block:: bash
 
@@ -78,13 +78,13 @@ Model training and evaluation
 
   git clone https://huggingface.co/datasets/Maxwell-Jia/AIME_2024
 
-**Pre-training data preprocessing**
+**Pre-training Data Preprocessing**
 
 .. code-block:: bash
 
   python3 recipe/retool/retool_sft_preprocess.py
 
-*Note: ReTool-SFT is downloaded automatically, and the generated data is saved in the ~/ReTool-SFT/data directory by default.*
+*Note: ReTool-SFT is automatically downloaded, and the generated data is saved by default in the ~/ReTool-SFT/data directory.*
 
 **Run the pre-training script**
 
@@ -100,7 +100,7 @@ Model training and evaluation
       --local_dir /PATH/TO/checkpoint/multiturn-sft-qwen-2.5-7b-instruct/global_step_372 \
       --target_dir /PATH/TO/checkpoint/multiturn-sft-qwen-2.5-7b-instruct/global_step_372/huggingface
 
-2. Preparing the code sandbox
+2. Code sandbox preparation
 
 Open-source sandbox code and deployment reference
 https://github.com/bytedance/SandboxFusion
@@ -129,7 +129,7 @@ https://github.com/bytedance/SandboxFusion
 
 3. Training
 
-The example configuration file is as follows. Create a run_qwen2.5_7b_dapo_npu.sh in the recipe/retool directory.
+The example configuration file is as follows. Create a run_qwen2.5_7b_dapo_npu.sh file in the recipe/retool directory.
 Modify the following parameters in the model training script based on your actual path configuration.
 
 .. code-block:: bash 
